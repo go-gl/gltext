@@ -64,7 +64,6 @@ func LoadFontData(fontData []byte, scale int32, cs *Charset) (font *Font, err er
 		}
 	}
 
-
 	return
 }
 
@@ -98,41 +97,41 @@ func (f *Font) Printf(x, y float32, fs string, argv ...interface{}) {
 	var vp [4]int32
 	gl.GetIntegerv(gl.VIEWPORT, vp[:])
 
-	gl.PushAttrib (gl.TRANSFORM_BIT)
-	gl.MatrixMode (gl.PROJECTION)
+	gl.PushAttrib(gl.TRANSFORM_BIT)
+	gl.MatrixMode(gl.PROJECTION)
 	gl.PushMatrix()
 	gl.LoadIdentity()
-	gl.Ortho (float64(vp[0]), float64(vp[2]), float64(vp[1]), float64(vp[3]), 0, 1)
+	gl.Ortho(float64(vp[0]), float64(vp[2]), float64(vp[1]), float64(vp[3]), 0, 1)
 	gl.PopAttrib()
 
-	gl.PushAttrib (gl.LIST_BIT | gl.CURRENT_BIT | gl.ENABLE_BIT | gl.TRANSFORM_BIT)
-	gl.MatrixMode (gl.MODELVIEW)
-	gl.Disable (gl.LIGHTING)
-	gl.Enable (gl.TEXTURE_2D)
-	gl.Disable (gl.DEPTH_TEST)
-	gl.Enable (gl.BLEND)
-	gl.BlendFunc (gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+	gl.PushAttrib(gl.LIST_BIT | gl.CURRENT_BIT | gl.ENABLE_BIT | gl.TRANSFORM_BIT)
+	gl.MatrixMode(gl.MODELVIEW)
+	gl.Disable(gl.LIGHTING)
+	gl.Enable(gl.TEXTURE_2D)
+	gl.Disable(gl.DEPTH_TEST)
+	gl.Enable(gl.BLEND)
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
-	gl.ListBase (f.listbase)
+	gl.ListBase(f.listbase)
 
 	var mv [16]float32
-	gl.GetFloatv (gl.MODELVIEW_MATRIX, mv[:])
+	gl.GetFloatv(gl.MODELVIEW_MATRIX, mv[:])
 
 	gl.PushMatrix()
 	gl.LoadIdentity()
-	gl.Translatef (x, (float32(vp[3]) - y - float32(f.scale)), 0)
-	gl.MultMatrixf (mv[:])
-	gl.CallLists (len(indices), gl.UNSIGNED_INT, indices)
+	gl.Translatef(x, (float32(vp[3]) - y - float32(f.scale)), 0)
+	gl.MultMatrixf(mv[:])
+	gl.CallLists(len(indices), gl.UNSIGNED_INT, indices)
 	gl.PopMatrix()
 	gl.PopAttrib()
 
-	gl.PushAttrib (gl.TRANSFORM_BIT)
-	gl.MatrixMode (gl.PROJECTION)
+	gl.PushAttrib(gl.TRANSFORM_BIT)
+	gl.MatrixMode(gl.PROJECTION)
 	gl.PopMatrix()
 	gl.PopAttrib()
 }
 
-func pow2(n int) int { return 1 << (uint(math.Log2(float64(n)))+1) }
+func pow2(n int) int { return 1 << (uint(math.Log2(float64(n))) + 1) }
 
 // makeList makes a display list for the given glyph.
 func (f *Font) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r rune) (err error) {
@@ -146,8 +145,8 @@ func (f *Font) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r rune) (err 
 	// Glyph dimensions.
 	glyphLeft := float32(gb.B.XMin)
 	glyphTop := float32(gb.B.YMin)
-	glyphWidth := float32(gb.B.XMax) - glyphLeft
-	glyphHeight := float32(gb.B.YMax) - glyphTop
+	glyphWidth := float32(gb.B.XMax - gb.B.XMin)
+	glyphHeight := float32(gb.B.YMax - gb.B.YMin)
 
 	// Create power-of-two texture dimensions.
 	texWidth := pow2(int(glyphWidth))
@@ -178,6 +177,8 @@ func (f *Font) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r rune) (err 
 		}
 	}
 
+	// Index for our display list and texture. This is the same as the rune
+	// value, minus the character set's lower bound.
 	tex := r - f.charset.Low
 
 	// Initialize glyph texture and render the image to it.
@@ -199,19 +200,14 @@ func (f *Font) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r rune) (err 
 	x := float64(glyphWidth) / float64(texWidth)
 	y := float64(glyphHeight) / float64(texHeight)
 
-	//fmt.Printf("%c: %.3f, %.3f, %.3f, %.3f\n", r, x, y, glyphWidth, glyphHeight)
-
 	// Draw the quad.
 	gl.Begin(gl.QUADS)
 	gl.TexCoord2d(0, 0)
 	gl.Vertex2f(0, glyphHeight)
-
 	gl.TexCoord2d(0, y)
 	gl.Vertex2f(0, 0)
-
 	gl.TexCoord2d(x, y)
 	gl.Vertex2f(glyphWidth, 0)
-
 	gl.TexCoord2d(x, 0)
 	gl.Vertex2f(glyphWidth, glyphHeight)
 	gl.End()

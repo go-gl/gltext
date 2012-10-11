@@ -37,11 +37,10 @@ func TestFont(t *testing.T) {
 		rect(float32(mx)-16, float32(my)-16, 32, 32)
 
 		gl.Color4f(1, 1, 1, 1)
-		font.Printf(10, 0, "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-		font.Printf(10, 40, "abcdefghijklmnopqrstuvwxyz 0123456789")
-		font.Printf(10, 70, "Cake & Pie")
-		font.Printf(10, 100, "%s", time.Now().Format(time.RFC1123))
-		font.Printf(10, 130, "%d x %d", mx, my)
+		font.Printf(10, 0, "Abc Def Ghi Jkl Mno Qqr Stu Vwx Yz 0123456789")
+		font.Printf(10, 40, "Cake & Pie")
+		font.Printf(10, 70, "%s", time.Now().Format(time.RFC1123))
+		font.Printf(10, 100, "%d x %d", mx, my)
 
 		glfw.SwapBuffers()
 	}
