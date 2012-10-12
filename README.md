@@ -8,17 +8,21 @@ programs. It deals with TrueType fonts using [freetype-go][fg].
 
 [fg]: https://code.google.com/p/freetype-go
 
+![go-gl/text Screenshot 1](/jteeuwen/text/blob/master/go-gl-text.png)
+
 
 ### TODO
 
 * Fix ugly font borders (blend mode issue?).
 * The positioning if strings isn't completely correct. The Y-axis
-  seems to be off by a few pixels.
+  seems to be off by a few pixels. This might be due to floating-point
+  rounding errors, or a lack of understanding of the freetype-go glyph
+  structure on my (jimt) part.
 * Provide functions for string metrics (pixel width/height).
-  These naturally have to take font scale and bounding area into account.
-  The bounding area cap may need to wrap thestring over multiple lines
+  These naturally have to take font scale and a bounding area into account.
+  The bounding area cap may need to wrap the string over multiple lines
   in order to fit it. Possibly supply an extra parameter to determine how
-  to handle these cases. Just cut off the excess, or wrap.
+  to handle these cases: Cut off the excess, or wrap lines.
 
 
 ### Dependencies
