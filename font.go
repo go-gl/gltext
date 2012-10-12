@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/go-gl/gl"
 	"image"
+	"io"
 	"io/ioutil"
 	"math"
 )
@@ -23,46 +24,28 @@ type Font struct {
 	listbase uint         // Holds the first display list id.
 }
 
-// LoadFontFile loads the given truetype font and returns a Font object.
-// The charset determines which rune range to use.
-//
-// Note: The supplied font should support the runes specified by the charset.
-func LoadFontFile(file string, scale int32, cs *Charset) (font *Font, err error) {
-	data, err := ioutil.ReadFile(file)
-	if err != nil {
-		return
-	}
-	return LoadFontData(data, scale, cs)
+// NewFont creates a new, uninitialized font instance for the given scale
+// (points) and character set.
+func NewFont(scale int32, charset *Charset) *Font {
+	f := new(Font)
+	f.scale = scale
+	f.charset = charset
+	return f
 }
 
-// LoadFontData loads the given truetype font and returns a Font object.
-// The charset determines which rune range to use.
-//
-// Note: The supplied font should support the runes specified by the charset.
-func LoadFontData(fontData []byte, scale int32, cs *Charset) (font *Font, err error) {
-	ttf, err := truetype.Parse(fontData)
-	if err != nil {
+// Release cleans up all font resources.
+// It can no longer be used for rendering after this call completes.
+func (f *Font) Release() {
+	if f.charset == nil {
 		return
 	}
 
-	gb := truetype.NewGlyphBuf()
+	gl.DeleteTextures(f.textures)
+	gl.DeleteLists(f.listbase, f.charset.Len())
 
-	font = new(Font)
-	font.charset = cs
-	font.scale = scale
-	font.textures = make([]gl.Texture, cs.Len())
-
-	gl.GenTextures(font.textures)
-	font.listbase = gl.GenLists(cs.Len())
-
-	for r := cs.Low; r <= cs.High; r++ {
-		err = font.makeList(ttf, gb, r)
-		if err != nil {
-			return
-		}
-	}
-
-	return
+	f.charset = nil
+	f.textures = nil
+	f.listbase = 0
 }
 
 // Scale returns the font height.
@@ -71,15 +54,52 @@ func (f *Font) Scale() int32 { return f.scale }
 // Charset returns the character set used to create this font.
 func (f *Font) Charset() *Charset { return f.charset }
 
-// Release cleans up all font resources.
-// It can no longer be used for rendering after this call completes.
-func (f *Font) Release() {
-	gl.DeleteTextures(f.textures)
-	gl.DeleteLists(f.listbase, f.charset.Len())
+// LoadFile loads a truetype font from the given file.
+//
+// Note: The supplied font should support the runes specified by the charset.
+func (f *Font) LoadFile(file string) (err error) {
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		return
+	}
+	return f.LoaBytes(data)
+}
 
-	f.charset = nil
-	f.textures = nil
-	f.listbase = 0
+// LoadStream loads a truetype font from the given input stream.
+//
+// Note: The supplied font should support the runes specified by the charset.
+func (f *Font) LoadStream(r io.Reader) (err error) {
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		return
+	}
+	return f.LoaBytes(data)
+}
+
+// LoaBytes loads a truetype font from the given byte data.
+//
+// Note: The supplied font should support the runes specified by the charset.
+func (f *Font) LoaBytes(fontData []byte) (err error) {
+	ttf, err := truetype.Parse(fontData)
+	if err != nil {
+		return
+	}
+
+	gb := truetype.NewGlyphBuf()
+
+	f.textures = make([]gl.Texture, f.charset.Len())
+	f.listbase = gl.GenLists(f.charset.Len())
+
+	gl.GenTextures(f.textures)
+
+	for r := f.charset.Low; r <= f.charset.High; r++ {
+		err = f.makeList(ttf, gb, r)
+		if err != nil {
+			return
+		}
+	}
+
+	return
 }
 
 // Printf prints the given string at the specified coordinates.
@@ -130,6 +150,7 @@ func (f *Font) Printf(x, y float32, fs string, argv ...interface{}) {
 }
 
 // pow2 returns the first power-of-two value >= than n.
+// This is used to create glyph texture dimensions.
 func pow2(n int) int { return 1 << (uint(math.Log2(float64(n))) + 1) }
 
 // makeList makes a display list for the given glyph.
@@ -158,7 +179,7 @@ func (f *Font) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r rune) (err 
 
 	// Use a freetype context to do the drawing.
 	c := freetype.NewContext()
-	c.SetDPI(72)
+	c.SetDPI(73)
 	c.SetFont(ttf)
 	c.SetFontSize(float64(f.scale))
 	c.SetClip(img.Bounds())
