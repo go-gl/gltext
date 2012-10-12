@@ -15,6 +15,8 @@ import (
 	"math"
 )
 
+const _GL_MULTISAMPLE_ARB = 0x809D
+
 // Font represents a truetype font, prepared for rendering text
 // to an OpenGL context.
 type Font struct {
@@ -125,8 +127,9 @@ func (f *Font) Printf(x, y float32, fs string, argv ...interface{}) {
 	gl.PushAttrib(gl.LIST_BIT | gl.CURRENT_BIT | gl.ENABLE_BIT | gl.TRANSFORM_BIT)
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.Disable(gl.LIGHTING)
-	gl.Enable(gl.TEXTURE_2D)
 	gl.Disable(gl.DEPTH_TEST)
+	gl.Disable(_GL_MULTISAMPLE_ARB)
+	gl.Enable(gl.TEXTURE_2D)
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
