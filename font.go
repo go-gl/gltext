@@ -12,9 +12,6 @@ import (
 	"image"
 	"io/ioutil"
 	"math"
-
-	"image/png"
-	"os"
 )
 
 // Font represents a truetype font, prepared for rendering text
@@ -135,6 +132,8 @@ func (f *Font) Printf(x, y float32, fs string, argv ...interface{}) {
 func pow2(n int) int { return 1 << (uint(math.Log2(float64(n))) + 1) }
 
 // makeList makes a display list for the given glyph.
+//
+// http://www.cs.sunysb.edu/documentation/freetype-2.1.9/docs/tutorial/step2.html
 func (f *Font) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r rune) (err error) {
 	glyph := ttf.Index(r)
 
@@ -144,10 +143,11 @@ func (f *Font) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r rune) (err 
 	}
 
 	// Glyph dimensions.
-	glyphLeft := float32(gb.B.XMin)
-	glyphTop := float32(gb.B.YMin)
-	glyphWidth := float32(gb.B.XMax - gb.B.XMin)
-	glyphHeight := float32(gb.B.YMax - gb.B.YMin)
+	metric := ttf.HMetric(f.scale, glyph)
+	glyphWidth := float32(metric.AdvanceWidth)
+	glyphHeight := float32(f.scale)
+	//glyphWidth := float32(gb.B.XMax - gb.B.XMin)
+	//glyphHeight := float32(gb.B.YMax - gb.B.YMin)
 
 	// Create power-of-two texture dimensions.
 	texWidth := pow2(int(glyphWidth))
@@ -167,16 +167,8 @@ func (f *Font) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r rune) (err 
 	c.SetSrc(image.White)
 
 	// Draw the glyph.
-	pt := freetype.Pt(0, int(glyphHeight))
+	pt := freetype.Pt(0, int(glyphHeight)+int(gb.B.YMin))
 	c.DrawString(string(r), pt)
-
-	{
-		fd, err := os.Create(fmt.Sprintf("testdata/%d.png", r))
-		if err == nil {
-			png.Encode(fd, img)
-			fd.Close()
-		}
-	}
 
 	// Index for our display list and texture. This is the same as the rune
 	// value, minus the character set's lower bound.
@@ -185,6 +177,7 @@ func (f *Font) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r rune) (err 
 	// Initialize glyph texture and render the image to it.
 	f.textures[tex].Bind(gl.TEXTURE_2D)
 
+	//gl.TexEnvi(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texWidth, texHeight,
@@ -194,9 +187,10 @@ func (f *Font) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r rune) (err 
 	// adequately positioned and scaled quad.
 	gl.NewList(f.listbase+uint(tex), gl.COMPILE)
 	f.textures[tex].Bind(gl.TEXTURE_2D)
-	gl.Translatef(glyphLeft, 0, 0)
+
+	gl.Translatef(float32(gb.B.XMin), 0, 0)
 	gl.PushMatrix()
-	gl.Translatef(0, glyphTop, 0)
+	gl.Translatef(0, float32(gb.B.YMin), 0)
 
 	x := float64(glyphWidth) / float64(texWidth)
 	y := float64(glyphHeight) / float64(texHeight)
@@ -216,7 +210,6 @@ func (f *Font) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r rune) (err 
 	gl.PopMatrix()
 
 	// Advance the current transformation to the next glyph location.
-	metric := ttf.HMetric(f.scale, glyph)
 	gl.Translatef(float32(metric.AdvanceWidth), 0, 0)
 
 	gl.EndList()
