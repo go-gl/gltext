@@ -1,5 +1,6 @@
-// This file is subject to a 1-clause BSD license.
-// Its contents can be found in the enclosed LICENSE file.
+// Copyright 2012 The go-gl Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 package text
 
@@ -154,7 +155,7 @@ func (f *Font) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r rune) (err 
 
 	// Create a temporary image to render to.
 	rect := image.Rect(0, 0, texWidth, texHeight)
-	img := image.NewGray(rect)
+	img := image.NewGray16(rect)
 
 	// Use a freetype context to do the drawing.
 	c := freetype.NewContext()
@@ -187,7 +188,7 @@ func (f *Font) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r rune) (err 
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texWidth, texHeight,
-		0, gl.LUMINANCE, gl.UNSIGNED_BYTE, img.Pix)
+		0, gl.LUMINANCE_ALPHA, gl.UNSIGNED_BYTE, img.Pix)
 
 	// Build the display list which renders the texture to an
 	// adequately positioned and scaled quad.
