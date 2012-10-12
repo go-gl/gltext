@@ -31,7 +31,7 @@ programs. It deals with TrueType fonts using [freetype-go][fg].
   a single call to `glCallLists`. One solution is to use an intermediate
   storage list which maps runes to texture/list ids. This will generate a fair
   amount of extra memory usage though.
-* Implement a BigmapFont type which loads font data from a sprite sheet.
+* Implement a BitmapFont type which loads font data from a sprite sheet.
 
 
 ### Dependencies
