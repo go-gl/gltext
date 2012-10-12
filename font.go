@@ -62,7 +62,7 @@ func (f *Font) LoadFile(file string) (err error) {
 	if err != nil {
 		return
 	}
-	return f.LoaBytes(data)
+	return f.LoadBytes(data)
 }
 
 // LoadStream loads a truetype font from the given input stream.
@@ -73,13 +73,13 @@ func (f *Font) LoadStream(r io.Reader) (err error) {
 	if err != nil {
 		return
 	}
-	return f.LoaBytes(data)
+	return f.LoadBytes(data)
 }
 
-// LoaBytes loads a truetype font from the given byte data.
+// LoadBytes loads a truetype font from the given byte data.
 //
 // Note: The supplied font should support the runes specified by the charset.
-func (f *Font) LoaBytes(fontData []byte) (err error) {
+func (f *Font) LoadBytes(fontData []byte) (err error) {
 	ttf, err := truetype.Parse(fontData)
 	if err != nil {
 		return
