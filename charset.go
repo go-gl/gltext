@@ -14,7 +14,7 @@ const MaxRune = '\U0010FFFF'
 // a charset containing only these runes can ensure the font does not allocate
 // more texture data than strictly necessary.
 //
-// The lowr and upper bounds are inclusive.
+// The lower and upper bounds are inclusive.
 type Charset struct {
 	Low  rune // Lower rune bound.
 	High rune // Upper rune bound.
@@ -23,7 +23,7 @@ type Charset struct {
 // Len returns the range of the character set.
 func (c *Charset) Len() int { return int(c.High-c.Low) + 1 }
 
-// Builtin charsets
+// Builtin character sets.
 var (
 	Ascii = &Charset{32, 127}
 	UTF8  = &Charset{0, MaxRune}

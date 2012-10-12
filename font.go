@@ -129,6 +129,7 @@ func (f *Font) Printf(x, y float32, fs string, argv ...interface{}) {
 	gl.PopAttrib()
 }
 
+// pow2 returns the first power-of-two value >= than n.
 func pow2(n int) int { return 1 << (uint(math.Log2(float64(n))) + 1) }
 
 // makeList makes a display list for the given glyph.
@@ -146,8 +147,6 @@ func (f *Font) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r rune) (err 
 	metric := ttf.HMetric(f.scale, glyph)
 	glyphWidth := float32(metric.AdvanceWidth)
 	glyphHeight := float32(f.scale)
-	//glyphWidth := float32(gb.B.XMax - gb.B.XMin)
-	//glyphHeight := float32(gb.B.YMax - gb.B.YMin)
 
 	// Create power-of-two texture dimensions.
 	texWidth := pow2(int(glyphWidth))
