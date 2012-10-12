@@ -8,7 +8,7 @@ programs. It deals with TrueType fonts using [freetype-go][fg].
 
 [fg]: https://code.google.com/p/freetype-go
 
-![go-gl/text Screenshot 1](/jteeuwen/text/blob/master/go-gl-text.png)
+![go-gl/text Screenshot 1](https://github.com/jteeuwen/text/blob/master/go-gl-text.png)
 
 
 ### TODO
