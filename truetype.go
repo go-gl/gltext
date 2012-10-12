@@ -182,7 +182,7 @@ func (f *TruetypeFont) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r run
 
 	// Use a freetype context to do the drawing.
 	c := freetype.NewContext()
-	c.SetDPI(73)
+	c.SetDPI(72)
 	c.SetFont(ttf)
 	c.SetFontSize(float64(f.scale))
 	c.SetClip(img.Bounds())
