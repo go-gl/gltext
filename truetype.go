@@ -51,7 +51,7 @@ func LoadTruetype(r io.Reader, scale int32, low, high rune, dir Direction) (*Fon
 
 	gb := ttf.Bounds(scale)
 	gw := (gb.XMax - gb.XMin)
-	gh := (gb.YMax - gb.YMin) + 4
+	gh := (gb.YMax - gb.YMin) + 5
 	iw := pow2(uint32(gw * gpr))
 	ih := pow2(uint32(gh * gpc))
 
@@ -85,7 +85,7 @@ func LoadTruetype(r io.Reader, scale int32, low, high rune, dir Direction) (*Fon
 		fc.Glyphs[gi].Width = int(gw)
 		fc.Glyphs[gi].Height = int(gh)
 
-		pt := freetype.Pt(int(gx), int(gy+scale))
+		pt := freetype.Pt(int(gx), int(gy)+int(c.PointToFix32(float64(scale))>>8))
 		c.DrawString(string(ch), pt)
 
 		if gi%16 == 0 {
