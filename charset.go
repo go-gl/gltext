@@ -4,6 +4,20 @@
 
 package text
 
+// A Glyph describes metrics for a single font glyph.
+// These indicate which area of a given image contains the
+// glyph data and how the glyph should be spaced in a rendered string.
+type Glyph struct {
+	X      int `json:"x"`      // The x location of the glyph on a sprite sheet.
+	Y      int `json:"y"`      // The y location of the glyph on a sprite sheet.
+	Width  int `json:"width"`  // The width of the glyph on a sprite sheet.
+	Height int `json:"height"` // The height of the glyph on a sprite sheet.
+
+	// Advance determines the distance to the next glyph.
+	// This is used to properly align non-monospaced fonts.
+	Advance int `json:"advance"`
+}
+
 // A Charset represents a set of glyph descriptors for a font.
 // Each glyph descriptor holds glyph metrics which are used to
 // properly align the given glyph in the resulting rendered string.
