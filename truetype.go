@@ -5,6 +5,7 @@
 package text
 
 import (
+	//"fmt"
 	"code.google.com/p/freetype-go/freetype"
 	"code.google.com/p/freetype-go/freetype/truetype"
 	"image"
@@ -49,8 +50,8 @@ func LoadTruetype(r io.Reader, scale int32, low, high rune, dir Direction) (*Fon
 	gpc := (gc / gpr) + 1
 
 	gb := ttf.Bounds(scale)
-	gw := gb.XMax - gb.XMin
-	gh := gb.YMax - gb.YMin
+	gw := (gb.XMax - gb.XMin)
+	gh := (gb.YMax - gb.YMin) + 5
 	iw := pow2(uint32(gw * gpr))
 	ih := pow2(uint32(gh * gpc))
 
@@ -72,26 +73,26 @@ func LoadTruetype(r io.Reader, scale int32, low, high rune, dir Direction) (*Fon
 	// For each glyph, we also create a corresponding Glyph structure
 	// for our Charset. It contains the appropriate glyph coordinate offsets.
 	var gi int
-	var px, py int32
+	var gx, gy int32
 
 	for ch := low; ch <= high; ch++ {
 		index := ttf.Index(ch)
 		metric := ttf.HMetric(scale, index)
 
 		fc.Glyphs[gi].Advance = int(metric.AdvanceWidth)
-		fc.Glyphs[gi].X = int(px)
-		fc.Glyphs[gi].Y = int(py)
+		fc.Glyphs[gi].X = int(gx)
+		fc.Glyphs[gi].Y = int(gy)
 		fc.Glyphs[gi].Width = int(gw)
 		fc.Glyphs[gi].Height = int(gh)
 
-		pt := freetype.Pt(int(px), int(py)+int(c.PointToFix32(float64(scale))>>8))
+		pt := freetype.Pt(int(gx), int(gy+scale))
 		c.DrawString(string(ch), pt)
 
 		if gi%16 == 0 {
-			px = 0
-			py += gh
+			gx = 0
+			gy += gh
 		} else {
-			px += gw
+			gx += gw
 		}
 
 		gi++
