@@ -95,8 +95,6 @@ func LoadTruetype(r io.Reader, scale int32, low, high rune, dir Direction) (*Fon
 		fc.Glyphs[gi].Width = int(gw)
 		fc.Glyphs[gi].Height = int(gh)
 
-		fmt.Printf("%d: %dx%d %+v\n", gi, iw, ih, fc.Glyphs[gi])
-
 		pt := freetype.Pt(int(px), int(py)+int(c.PointToFix32(float64(scale))>>8))
 		c.DrawString(string(ch), pt)
 
