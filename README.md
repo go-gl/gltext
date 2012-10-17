@@ -22,20 +22,6 @@ font does as well.
 
 * Determining the height of truetype glyphs is not entirely accurate.
   It is unclear at this point how to get to this information reliably.
-* Bitmap font rendering has issues with non-power-of-two scale factors.
-  There seems to be a problem with texture coordinates for each glyph in these
-  cases. I have verified that the values in the `Glyph` structs, as well as the
-  scaled input image to `loadFont` (in font.go) are correct in all situations.
-  As well as the output of `ToPow2`. The fault lies somewhere in the
-  calculations of the glyph texture coordinates at around line 96 of `font.go`.
-  Power-of-two factors like `1, 2, 4 and 8` yield correct results.
-  
-  For an example of this issue, run `TestBitmap` in `bitmap_test.go`.
-  It renders the same string at a number of different scale factors.
-  Only the pow2 factors look like they should. Eventhough the same code
-  is shared by Truetype fonts, they do not share this problem, because the
-  scaling for truetype fonts occurs before `loadFont` is called, and it is
-  supplied a pow2-sized image.
 
 
 ### Dependencies

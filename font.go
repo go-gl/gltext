@@ -30,14 +30,9 @@ func loadFont(img *image.RGBA, config *FontConfig) (f *Font, err error) {
 	f = new(Font)
 	f.config = config
 
-	// Fetch original image dimensions.
-	ib := img.Bounds()
-	origWidth := ib.Dx()
-	origHeight := ib.Dy()
-
 	// Resize image to next power-of-two.
 	img = toPow2(img)
-	ib = img.Bounds()
+	ib := img.Bounds()
 
 	// Create the texture itself. It will contain all glyphs.
 	// Individual glyph-quads display a subset of this texture.
@@ -53,12 +48,8 @@ func loadFont(img *image.RGBA, config *FontConfig) (f *Font, err error) {
 
 	texWidth := float32(ib.Dx())
 	texHeight := float32(ib.Dy())
-	deltaX := float32(origWidth) / texWidth
-	deltaY := float32(origHeight) / texHeight
 
-	//fmt.Printf("Image size: %d x %d\n", origWidth, origHeight)
 	//fmt.Printf("Texture size: %0.3f x %0.3f\n", texWidth, texHeight)
-	//fmt.Printf("Delta: %0.3f x %0.3f\n", deltaX, deltaY)
 
 	for index, glyph := range config.Glyphs {
 		// Update max glyph bounds.
@@ -75,10 +66,10 @@ func loadFont(img *image.RGBA, config *FontConfig) (f *Font, err error) {
 		vh := float32(glyph.Height)
 
 		// Texture coordinate offsets.
-		tx1 := float32(glyph.X) * deltaX / texWidth
-		ty1 := float32(glyph.Y) * deltaY / texHeight
-		tx2 := tx1 + (vw*deltaX)/texWidth
-		ty2 := ty1 + (vh*deltaY)/texHeight
+		tx1 := float32(glyph.X) / texWidth
+		ty1 := float32(glyph.Y) / texHeight
+		tx2 := (float32(glyph.X) + vw) / texWidth
+		ty2 := (float32(glyph.Y) + vh) / texHeight
 
 		//fmt.Printf("%03d: %f %f %f %f\n", index, tx1, ty1, tx2, ty2)
 		//fmt.Printf("     %+v\n", glyph)
