@@ -20,6 +20,8 @@ font does as well.
 
 ### Known bugs
 
+* Determining the height of truetype glyphs is not entirely accurate.
+  It is unclear at this point how to get to this information reliably.
 * Bitmap font rendering has issues with non-power-of-two scale factors.
   There seems to be a problem with texture coordinates for each glyph in these
   cases. I have verified that the values in the `Glyph` structs, as well as the

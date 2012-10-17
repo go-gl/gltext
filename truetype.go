@@ -13,6 +13,8 @@ import (
 	"io/ioutil"
 )
 
+// http://www.freetype.org/freetype2/docs/tutorial/step2.html
+
 // LoadTruetype loads a truetype font from the given stream and 
 // applies the given font scale in points.
 //
