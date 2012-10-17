@@ -137,8 +137,9 @@ func (f *Font) Printf(x, y float32, fs string, argv ...interface{}) error {
 
 	// Runes form display list indices.
 	// For this purpose, they need to be offset by -FontConfig.Low
+	low := f.config.Low
 	for i := range indices {
-		indices[i] -= f.config.Low
+		indices[i] -= low
 	}
 
 	var vp [4]int32

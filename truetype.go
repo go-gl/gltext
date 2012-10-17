@@ -7,7 +7,6 @@ package text
 import (
 	"code.google.com/p/freetype-go/freetype"
 	"code.google.com/p/freetype-go/freetype/truetype"
-	"fmt"
 	"image"
 	"io"
 	"io/ioutil"
@@ -74,17 +73,11 @@ func LoadTruetype(r io.Reader, scale int32, low, high rune, dir Direction) (*Fon
 	// for our Charset. It contains the appropriate glyph coordinate offsets.
 	var gi int
 	var px, py int32
-	buf := truetype.NewGlyphBuf()
 
 	for ch := low; ch <= high; ch++ {
 		index := ttf.Index(ch)
-		err := buf.Load(ttf, scale, index, nil)
-
-		if err != nil {
-			return nil, fmt.Errorf("Failed to load glyph data for rune %c: %v", ch, err)
-		}
-
 		metric := ttf.HMetric(scale, index)
+
 		fc.Glyphs[gi].Advance = int(metric.AdvanceWidth)
 		fc.Glyphs[gi].X = int(px)
 		fc.Glyphs[gi].Y = int(py)
