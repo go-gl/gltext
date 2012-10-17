@@ -51,7 +51,7 @@ func LoadTruetype(r io.Reader, scale int32, low, high rune, dir Direction) (*Fon
 
 	gb := ttf.Bounds(scale)
 	gw := (gb.XMax - gb.XMin)
-	gh := (gb.YMax - gb.YMin) + 5
+	gh := (gb.YMax - gb.YMin) + 4
 	iw := pow2(uint32(gw * gpr))
 	ih := pow2(uint32(gh * gpc))
 
