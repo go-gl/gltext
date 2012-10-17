@@ -4,27 +4,33 @@
 
 package text
 
-// Maximum value a valid UTF8 rune can have.
-const MaxRune = '\U0010FFFF'
+// A Charset represents a set of glyph descriptors for a font.
+// Each glyph descriptor holds glyph metrics which are used to
+// properly align the given glyph in the resulting rendered string.
+type Charset []Glyph
 
-// A Charset represents a range of runes which should
-// be used to prepare a font for rendering.
+// Scale scales all glyphs by the given factor and repositions them
+// appropriately. A scale of 1 retains the original size. A scale of 2
+// doubles the size of each glyph, etc.
 //
-// If a font is created specifically to render only a small subset of runes,
-// a charset containing only these runes can ensure the font does not allocate
-// more texture data than strictly necessary.
-//
-// The lower and upper bounds are inclusive.
-type Charset struct {
-	Low  rune // Lower rune bound.
-	High rune // Upper rune bound.
+// This is useful when the accompanying sprite sheet is scaled by the
+// same factor. In this case, we want the glyph data to match up with the
+// new image.
+func (c Charset) Scale(factor int) {
+	if factor <= 1 {
+		// A factor of zero results in zero-sized glyphs and
+		// is therefore not valid. A factor of 1 does not change
+		// the glyphs, so we can ignore it.
+		return
+	}
+
+	// Multiply each glyph field by the given factor
+	// to scale them up to the new size.
+	for i := range c {
+		c[i].X *= factor
+		c[i].Y *= factor
+		c[i].Width *= factor
+		c[i].Height *= factor
+		c[i].Advance *= factor
+	}
 }
-
-// Len returns the range of the character set.
-func (c *Charset) Len() int { return int(c.High-c.Low) + 1 }
-
-// Builtin character sets.
-var (
-	Ascii = &Charset{32, 127}
-	UTF8  = &Charset{0, MaxRune}
-)

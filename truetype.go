@@ -8,157 +8,113 @@ import (
 	"code.google.com/p/freetype-go/freetype"
 	"code.google.com/p/freetype-go/freetype/truetype"
 	"fmt"
-	"github.com/go-gl/gl"
 	"image"
 	"io"
 	"io/ioutil"
-	"math"
 )
 
-const _GL_MULTISAMPLE_ARB = 0x809D
-
-// TruetypeFont represents a truetype font, prepared for rendering text
-// to an OpenGL context.
-type TruetypeFont struct {
-	textures []gl.Texture // Holds the texture id's.
-	charset  *Charset     // Character set used to generate the font.
-	scale    int32        // Font height.
-	listbase uint         // Holds the first display list id.
-}
-
-// NewTruetypeFont creates a new, uninitialized font instance for
-// the given scale (points) and character set.
-func NewTruetypeFont(scale int32, charset *Charset) Font {
-	f := new(TruetypeFont)
-	f.scale = scale
-	f.charset = charset
-	return f
-}
-
-// Release cleans up all font resources.
-// It can no longer be used for rendering after this call completes.
-func (f *TruetypeFont) Release() {
-	if f.charset == nil {
-		return
-	}
-
-	gl.DeleteTextures(f.textures)
-	gl.DeleteLists(f.listbase, f.charset.Len())
-
-	f.charset = nil
-	f.textures = nil
-	f.listbase = 0
-}
-
-// Scale returns the font height.
-func (f *TruetypeFont) Scale() int32 { return f.scale }
-
-// Charset returns the character set used to create this font.
-func (f *TruetypeFont) Charset() *Charset { return f.charset }
-
-// LoadFile loads a truetype font from the given file.
+// LoadTruetype loads a truetype font from the given stream and 
+// applies the given font scale in points.
 //
-// Note: The supplied font should support the runes specified by the charset.
-func (f *TruetypeFont) LoadFile(file string) (err error) {
-	data, err := ioutil.ReadFile(file)
-	if err != nil {
-		return
-	}
-	return f.LoadBytes(data)
-}
-
-// LoadStream loads a truetype font from the given input stream.
+// The low and high values determine the lower and upper rune limits
+// we should load for this font. For standard ASCII this would be: 32, 127.
 //
-// Note: The supplied font should support the runes specified by the charset.
-func (f *TruetypeFont) LoadStream(r io.Reader) (err error) {
+// The dir value determines the orientation of the text we render
+// with this font. This should be any of the predefined Direction constants.
+func LoadTruetype(r io.Reader, scale int32, low, high rune, dir Direction) (*Font, error) {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
-		return
+		return nil, err
 	}
-	return f.LoadBytes(data)
-}
 
-// LoadBytes loads a truetype font from the given byte data.
-//
-// Note: The supplied font should support the runes specified by the charset.
-func (f *TruetypeFont) LoadBytes(fontData []byte) (err error) {
-	ttf, err := truetype.Parse(fontData)
+	// Read the truetype font.
+	ttf, err := truetype.Parse(data)
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	gb := truetype.NewGlyphBuf()
+	// Create our FontConfig type.
+	var fc FontConfig
+	fc.Dir = dir
+	fc.Low = low
+	fc.High = high
+	fc.Glyphs = make(Charset, high-low+1)
 
-	f.textures = make([]gl.Texture, f.charset.Len())
-	f.listbase = gl.GenLists(f.charset.Len())
+	// Create an image, large enough to store all requested glyphs.
+	//
+	// We limit the image to 16 glyphs per row. Then add as many rows as
+	// needed to encompass all glyphs, while making sure the resulting image
+	// has power-of-two dimensions.
+	gc := int32(len(fc.Glyphs))
+	gpr := int32(16)
+	gpc := (gc / gpr) + 1
 
-	gl.GenTextures(f.textures)
+	if gpc == 0 {
+		gpc = 1
+	}
 
-	for r := f.charset.Low; r <= f.charset.High; r++ {
-		err = f.makeList(ttf, gb, r)
+	gb := ttf.Bounds(scale)
+	gw := gb.XMax - gb.XMin
+	gh := gb.YMax - gb.YMin
+	iw := pow2(uint32(gw * gpr))
+	ih := pow2(uint32(gh * gpc))
+
+	rect := image.Rect(0, 0, int(iw), int(ih))
+	img := image.NewRGBA(rect)
+
+	// Use a freetype context to do the drawing.
+	c := freetype.NewContext()
+	c.SetDPI(72)
+	c.SetFont(ttf)
+	c.SetFontSize(float64(scale))
+	c.SetClip(img.Bounds())
+	c.SetDst(img)
+	c.SetSrc(image.White)
+
+	// Iterate over all relevant glyphs in the truetype font and
+	// draw them all to the image buffer.
+	//
+	// For each glyph, we also create a corresponding Glyph structure
+	// for our Charset. It contains the appropriate glyph coordinate offsets.
+	var gi int
+	var px, py int32
+	buf := truetype.NewGlyphBuf()
+
+	for ch := low; ch <= high; ch++ {
+		index := ttf.Index(ch)
+		err := buf.Load(ttf, scale, index, nil)
+
 		if err != nil {
-			return
+			return nil, fmt.Errorf("Failed to load glyph data for rune %c: %v", ch, err)
 		}
+
+		metric := ttf.HMetric(scale, index)
+		fc.Glyphs[gi].Advance = int(metric.AdvanceWidth)
+		fc.Glyphs[gi].X = int(px)
+		fc.Glyphs[gi].Y = int(py)
+		fc.Glyphs[gi].Width = int(gw)
+		fc.Glyphs[gi].Height = int(gh)
+
+		fmt.Printf("%d: %dx%d %+v\n", gi, iw, ih, fc.Glyphs[gi])
+
+		pt := freetype.Pt(int(px), int(py)+int(c.PointToFix32(float64(scale))>>8))
+		c.DrawString(string(ch), pt)
+
+		if gi%16 == 0 {
+			px = 0
+			py += gh
+		} else {
+			px += gw
+		}
+
+		gi++
 	}
 
-	return
+	return loadFont(img, &fc)
 }
 
-// Printf prints the given string at the specified coordinates.
-func (f *TruetypeFont) Printf(x, y float32, fs string, argv ...interface{}) {
-	// Create display list indices from runes. The runes need to be offset
-	// by -Charset.Low to create the correct index.
-	indices := []rune(fmt.Sprintf(fs, argv...))
-
-	for i, r := range indices {
-		indices[i] = r - f.charset.Low
-	}
-
-	var vp [4]int32
-	gl.GetIntegerv(gl.VIEWPORT, vp[:])
-
-	gl.PushAttrib(gl.TRANSFORM_BIT)
-	gl.MatrixMode(gl.PROJECTION)
-	gl.PushMatrix()
-	gl.LoadIdentity()
-	gl.Ortho(float64(vp[0]), float64(vp[2]), float64(vp[1]), float64(vp[3]), 0, 1)
-	gl.PopAttrib()
-
-	gl.PushAttrib(gl.LIST_BIT | gl.CURRENT_BIT | gl.ENABLE_BIT | gl.TRANSFORM_BIT)
-	gl.MatrixMode(gl.MODELVIEW)
-	gl.Disable(gl.LIGHTING)
-	gl.Disable(gl.DEPTH_TEST)
-	gl.Disable(_GL_MULTISAMPLE_ARB)
-	gl.Enable(gl.TEXTURE_2D)
-	gl.Enable(gl.BLEND)
-	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-
-	gl.ListBase(f.listbase)
-
-	var mv [16]float32
-	gl.GetFloatv(gl.MODELVIEW_MATRIX, mv[:])
-
-	gl.PushMatrix()
-	gl.LoadIdentity()
-	gl.Translatef(x, (float32(vp[3]) - y - float32(f.scale)), 0)
-	gl.MultMatrixf(mv[:])
-	gl.CallLists(len(indices), gl.UNSIGNED_INT, indices)
-	gl.PopMatrix()
-	gl.PopAttrib()
-
-	gl.PushAttrib(gl.TRANSFORM_BIT)
-	gl.MatrixMode(gl.PROJECTION)
-	gl.PopMatrix()
-	gl.PopAttrib()
-}
-
-// pow2 returns the first power-of-two value >= than n.
-// This is used to create glyph texture dimensions.
-func pow2(n int) int { return 1 << (uint(math.Log2(float64(n))) + 1) }
-
+/*
 // makeList makes a display list for the given glyph.
-//
-// http://www.cs.sunysb.edu/documentation/freetype-2.1.9/docs/tutorial/step2.html
 func (f *TruetypeFont) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r rune) (err error) {
 	glyph := ttf.Index(r)
 
@@ -200,7 +156,6 @@ func (f *TruetypeFont) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r run
 	// Initialize glyph texture and render the image to it.
 	f.textures[tex].Bind(gl.TEXTURE_2D)
 
-	//gl.TexEnvi(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texWidth, texHeight,
@@ -213,7 +168,7 @@ func (f *TruetypeFont) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r run
 
 	gl.Translatef(float32(gb.B.XMin), 0, 0)
 	gl.PushMatrix()
-	gl.Translatef(0, float32(gb.B.YMin), 0)
+	//gl.Translatef(0, float32(gb.B.YMin), 0)
 
 	x := float64(glyphWidth) / float64(texWidth)
 	y := float64(glyphHeight) / float64(texHeight)
@@ -238,3 +193,5 @@ func (f *TruetypeFont) makeList(ttf *truetype.Font, gb *truetype.GlyphBuf, r run
 	gl.EndList()
 	return
 }
+
+*/
