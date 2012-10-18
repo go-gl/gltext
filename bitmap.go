@@ -19,7 +19,7 @@ import (
 // A scale factor of 1 retains the original size. A factor of 2 doubles the 
 // font size, etc. A scale factor of 0 is not valid and will default to 1.
 //
-// Supported image formats are: PNG, JPEG and GIF.
+// Supported image formats are 32-bit RGBA as PNG, JPEG and GIF.
 func LoadBitmap(img, config io.Reader, scale int) (*Font, error) {
 	pix, _, err := image.Decode(img)
 	if err != nil {
