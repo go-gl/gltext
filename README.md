@@ -36,7 +36,7 @@ font does as well.
 
 Refer to [go-gl/examples/text][ex] for usage examples.
 
-[ex]: https://github.com/go-gl/examples/text
+[ex]: https://github.com/go-gl/examples/tree/master/text
 
 
 ### License
