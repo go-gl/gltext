@@ -13,11 +13,6 @@ The package supports the full set of unicode characters, provided the loaded
 font does as well.
 
 
-### TODO
-
-* Provide functions for string metrics (pixel width/height).
-
-
 ### Known bugs
 
 * Determining the height of truetype glyphs is not entirely accurate.
