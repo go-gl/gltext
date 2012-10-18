@@ -48,14 +48,14 @@ func LoadTruetype(r io.Reader, scale int32, low, high rune, dir Direction) (*Fon
 	// needed to encompass all glyphs, while making sure the resulting image
 	// has power-of-two dimensions.
 	gc := int32(len(fc.Glyphs))
-	gpr := int32(16)
-	gpc := (gc / gpr) + 1
+	glyphsPerRow := int32(16)
+	glyphsPerCol := (gc / glyphsPerRow) + 1
 
 	gb := ttf.Bounds(scale)
 	gw := (gb.XMax - gb.XMin)
 	gh := (gb.YMax - gb.YMin) + 5
-	iw := pow2(uint32(gw * gpr))
-	ih := pow2(uint32(gh * gpc))
+	iw := pow2(uint32(gw * glyphsPerRow))
+	ih := pow2(uint32(gh * glyphsPerCol))
 
 	rect := image.Rect(0, 0, int(iw), int(ih))
 	img := image.NewRGBA(rect)

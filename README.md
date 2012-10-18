@@ -17,6 +17,12 @@ font does as well.
 
 * Determining the height of truetype glyphs is not entirely accurate.
   It is unclear at this point how to get to this information reliably.
+  Specifically the parts in `LoadTruetype` at truetype.go#L54+.
+  The vertical glyph bounds computed by freetype-go are not correct for
+  certain fonts. Right now we manually offset the value by added `4` to
+  the height. This is an unreliable hack and should be fixed.
+* `freetype-go` does not expose `AdvanceHeight` for vertically rendered fonts.
+  This may mean that the Advance size for top-to-bottom fonts is incorrect.
 
 
 ### Dependencies
