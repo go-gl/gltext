@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/go-gl/gl"
 	"image"
-	"strings"
 )
 
 // A Font allows rendering of text to an OpenGL context.
@@ -125,36 +124,22 @@ func (f *Font) Release() {
 }
 
 // Metrics returns the pixel width and height for the given string.
-// This function takes newlines in the string into account, along with
-// the rendering direction of the font.
+// This takes the scale and rendering direction of the font into account.
 //
 // Unknown runes will be counted as having the maximum glyph bounds as
 // defined by Font.GlyphBounds().
-func (f *Font) Metrics(str string) (int, int) {
-	if len(str) == 0 {
+func (f *Font) Metrics(text string) (int, int) {
+	if len(text) == 0 {
 		return 0, 0
 	}
 
-	var width, height int
-
 	gw, gh := f.GlyphBounds()
-	lines := strings.Split(str, "\n")
 
 	if f.config.Dir == TopToBottom {
-		width = len(lines) * gw
-
-		for _, line := range lines {
-			height += f.advanceSize(line)
-		}
-	} else {
-		height = len(lines) * gh
-
-		for _, line := range lines {
-			width += f.advanceSize(line)
-		}
+		return gw, f.advanceSize(text)
 	}
 
-	return width, height
+	return f.advanceSize(text), gh
 }
 
 // advanceSize computes the pixel width or height for the given single-line
