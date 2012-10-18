@@ -33,7 +33,7 @@ font does as well.
 
     go get github.com/go-gl/text
 
-Refer to [go-gl/examples/text][ex] for a usage example.
+Refer to [go-gl/examples/text][ex] for usage examples.
 
 [ex]: https://github.com/go-gl/examples/text
 
