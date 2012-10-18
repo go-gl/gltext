@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/go-gl/gl"
 	"image"
+	"strings"
 )
 
 // A Font allows rendering of text to an OpenGL context.
@@ -49,8 +50,6 @@ func loadFont(img *image.RGBA, config *FontConfig) (f *Font, err error) {
 	texWidth := float32(ib.Dx())
 	texHeight := float32(ib.Dy())
 
-	//fmt.Printf("Texture size: %0.3f x %0.3f\n", texWidth, texHeight)
-
 	for index, glyph := range config.Glyphs {
 		// Update max glyph bounds.
 		if glyph.Width > f.maxGlyphWidth {
@@ -70,9 +69,6 @@ func loadFont(img *image.RGBA, config *FontConfig) (f *Font, err error) {
 		ty1 := float32(glyph.Y) / texHeight
 		tx2 := (float32(glyph.X) + vw) / texWidth
 		ty2 := (float32(glyph.Y) + vh) / texHeight
-
-		//fmt.Printf("%03d: %f %f %f %f\n", index, tx1, ty1, tx2, ty2)
-		//fmt.Printf("     %+v\n", glyph)
 
 		// Advance width (or height if we render top-to-bottom)
 		adv := float32(glyph.Advance)
@@ -108,12 +104,88 @@ func loadFont(img *image.RGBA, config *FontConfig) (f *Font, err error) {
 	return
 }
 
+// Dir returns the font's rendering orientation.
+func (f *Font) Dir() Direction { return f.config.Dir }
+
+// Low returns the font's lower rune bound.
+func (f *Font) Low() rune { return f.config.Low }
+
+// High returns the font's upper rune bound.
+func (f *Font) High() rune { return f.config.High }
+
+// Glyphs returns the font's glyph descriptors.
+func (f *Font) Glyphs() Charset { return f.config.Glyphs }
+
 // Release releases font resources.
 // A font can no longer be used for rendering after this call completes.
 func (f *Font) Release() {
 	f.texture.Delete()
 	gl.DeleteLists(f.listbase, len(f.config.Glyphs))
 	f.config = nil
+}
+
+// Metrics returns the pixel width and height for the given string.
+// This function takes newlines in the string into account, along with
+// the rendering direction of the font.
+//
+// Unknown runes will be counted as having the maximum glyph bounds as
+// defined by Font.GlyphBounds().
+func (f *Font) Metrics(str string) (int, int) {
+	if len(str) == 0 {
+		return 0, 0
+	}
+
+	var width, height int
+
+	gw, gh := f.GlyphBounds()
+	lines := strings.Split(str, "\n")
+
+	if f.config.Dir == TopToBottom {
+		width = len(lines) * gw
+
+		for _, line := range lines {
+			height += f.advanceSize(line)
+		}
+	} else {
+		height = len(lines) * gh
+
+		for _, line := range lines {
+			width += f.advanceSize(line)
+		}
+	}
+
+	return width, height
+}
+
+// advanceSize computes the pixel width or height for the given single-line
+// input string. This iterates over all of its runes, finds the matching
+// Charset entry and adds up the Advance values.
+//
+// Unknown runes will be counted as having the maximum glyph bounds as
+// defined by Font.GlyphBounds().
+func (f *Font) advanceSize(line string) int {
+	gw, gh := f.GlyphBounds()
+	glyphs := f.config.Glyphs
+	low := f.config.Low
+	indices := []rune(line)
+
+	var size int
+	for _, r := range indices {
+		r -= low
+
+		if r >= 0 && int(r) < len(glyphs) {
+			size += glyphs[r].Advance
+			continue
+		}
+
+		if f.config.Dir == TopToBottom {
+			size += gh
+		} else {
+			size += gw
+		}
+	}
+
+	return size
 }
 
 // Printf draws the given string at the specified coordinates.
@@ -125,6 +197,10 @@ func (f *Font) Release() {
 // this method for each line seperately.
 func (f *Font) Printf(x, y float32, fs string, argv ...interface{}) error {
 	indices := []rune(fmt.Sprintf(fs, argv...))
+
+	if len(indices) == 0 {
+		return nil
+	}
 
 	// Runes form display list indices.
 	// For this purpose, they need to be offset by -FontConfig.Low
