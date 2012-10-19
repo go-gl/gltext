@@ -5,9 +5,9 @@
 package text
 
 import (
-	//"fmt"
 	"code.google.com/p/freetype-go/freetype"
 	"code.google.com/p/freetype-go/freetype/truetype"
+	"github.com/go-gl/glh"
 	"image"
 	"io"
 	"io/ioutil"
@@ -54,8 +54,8 @@ func LoadTruetype(r io.Reader, scale int32, low, high rune, dir Direction) (*Fon
 	gb := ttf.Bounds(scale)
 	gw := (gb.XMax - gb.XMin)
 	gh := (gb.YMax - gb.YMin) + 5
-	iw := pow2(uint32(gw * glyphsPerRow))
-	ih := pow2(uint32(gh * glyphsPerCol))
+	iw := glh.Pow2(uint32(gw * glyphsPerRow))
+	ih := glh.Pow2(uint32(gh * glyphsPerCol))
 
 	rect := image.Rect(0, 0, int(iw), int(ih))
 	img := image.NewRGBA(rect)

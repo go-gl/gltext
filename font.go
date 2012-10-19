@@ -7,6 +7,7 @@ package text
 import (
 	"fmt"
 	"github.com/go-gl/gl"
+	"github.com/go-gl/glh"
 	"image"
 )
 
@@ -31,7 +32,7 @@ func loadFont(img *image.RGBA, config *FontConfig) (f *Font, err error) {
 	f.config = config
 
 	// Resize image to next power-of-two.
-	img = toPow2(img)
+	img = glh.Pow2Image(img).(*image.RGBA)
 	ib := img.Bounds()
 
 	// Create the texture itself. It will contain all glyphs.
@@ -99,7 +100,7 @@ func loadFont(img *image.RGBA, config *FontConfig) (f *Font, err error) {
 		gl.EndList()
 	}
 
-	err = checkGLError()
+	err = glh.CheckGLError()
 	return
 }
 
@@ -245,7 +246,7 @@ func (f *Font) Printf(x, y float32, fs string, argv ...interface{}) error {
 	gl.MatrixMode(gl.PROJECTION)
 	gl.PopMatrix()
 	gl.PopAttrib()
-	return checkGLError()
+	return glh.CheckGLError()
 }
 
 // GlyphBounds returns the largest width and height for any of the glyphs
