@@ -235,7 +235,7 @@ func (f *Font) Printf(x, y float32, fs string, argv ...interface{}) error {
 				gl.Translatef(x-mgw, float32(vp[3])-y-mgh, 0)
 			}
 
-			gl.MultMatrixf(mv[:])
+			gl.MultMatrixf(&mv)
 			gl.CallLists(len(indices), gl.UNSIGNED_INT, indices)
 		}
 		gl.PopMatrix()
