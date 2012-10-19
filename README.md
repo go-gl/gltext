@@ -21,7 +21,8 @@ font does as well.
   * [Youtube video](http://www.youtube.com/watch?v=CGZRHJvJYIg)
   
   More links to info in the youtube video description.
-  
+  An alternative might be a port of [GLyphy](http://code.google.com/p/glyphy/)
+
 
 ### Known bugs
 
