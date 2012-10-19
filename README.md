@@ -3,15 +3,25 @@
 **Note**: This package is experimental and subject to change.
 Use at your own discretion.
 
-The text package offers a set of text rendering utilities for OpenGL
+The text package offers a simple set of text rendering utilities for OpenGL
 programs. It deals with TrueType and Bitmap (raster) fonts. Text can be
-rendered in predefined directions (Left-to-right, right-to-left and
-top-to-bottom). This allows for correct display of text for various
-languages.
+rendered in various directions (Left-to-right, right-to-left and top-to-bottom).
+This allows for correct display of text for various languages.
 
 The package supports the full set of unicode characters, provided the loaded
 font does as well.
 
+
+### TODO
+
+* Have a look at Valve's 'Signed Distance Field` techniques to render
+  sharp font textures are different zoom levels.
+
+  * [SIGGRAPH2007_AlphaTestedMagnification.pdf](http://www.valvesoftware.com/publications/2007/SIGGRAPH2007_AlphaTestedMagnification.pdf)
+  * [Youtube video](http://www.youtube.com/watch?v=CGZRHJvJYIg)
+  
+  More links to info in the youtube video description.
+  
 
 ### Known bugs
 
