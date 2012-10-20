@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package text
+package gltext
 
 // A Glyph describes metrics for a single font glyph.
 // These indicate which area of a given image contains the

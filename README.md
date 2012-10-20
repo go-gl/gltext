@@ -1,9 +1,9 @@
-## Text
+## gltext
 
 **Note**: This package is experimental and subject to change.
 Use at your own discretion.
 
-The text package offers a simple set of text rendering utilities for OpenGL
+The gltext package offers a simple set of text rendering utilities for OpenGL
 programs. It deals with TrueType and Bitmap (raster) fonts. Text can be
 rendered in various directions (Left-to-right, right-to-left and top-to-bottom).
 This allows for correct display of text for various languages.
@@ -43,11 +43,11 @@ font does as well.
 
 ### Usage
 
-    go get github.com/go-gl/text
+    go get github.com/go-gl/gltext
 
-Refer to [go-gl/examples/text][ex] for usage examples.
+Refer to [go-gl/examples/gltext][ex] for usage examples.
 
-[ex]: https://github.com/go-gl/examples/tree/master/text
+[ex]: https://github.com/go-gl/examples/tree/master/gltext
 
 
 ### License
