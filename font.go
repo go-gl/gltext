@@ -38,7 +38,7 @@ func loadFont(img *image.RGBA, config *FontConfig) (f *Font, err error) {
 	// Create the texture itself. It will contain all glyphs.
 	// Individual glyph-quads display a subset of this texture.
 	f.texture = gl.GenTexture()
-	gl.BindTexture(gl.TEXTURE_2D, uint(f.texture))
+	f.texture.Bind(gl.TEXTURE_2D)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, ib.Dx(), ib.Dy(), 0,
@@ -215,7 +215,7 @@ func (f *Font) Printf(x, y float32, fs string, argv ...interface{}) error {
 
 		gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 		gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
-		gl.BindTexture(gl.TEXTURE_2D, uint(f.texture))
+		f.texture.Bind(gl.TEXTURE_2D)
 		gl.ListBase(f.listbase)
 
 		var mv [16]float32
