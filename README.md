@@ -40,7 +40,7 @@ font does as well.
 
 	go get code.google.com/p/freetype-go
 
-Freetype-go package is released under GPLv2 e FTL licenses. You can choose
+Freetype-go package is released under GPLv2 and FTL licenses. You can choose
 which one is a better fit for your use case but FTL requires you to give
 some form of credit to Freetype.org
 

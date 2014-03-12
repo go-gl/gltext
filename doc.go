@@ -12,7 +12,7 @@ top-to-bottom). This allows for correct display of text for various languages.
 This package supports the full set of unicode characters, provided the loaded
 font does as well.
 
-This packages uses freetype-go (code.google.com/p/freetype-go
+This packages uses freetype-go (code.google.com/p/freetype-go)
 
 
 Freetype-go package is released under GPLv2 e FTL licenses. You can choose
