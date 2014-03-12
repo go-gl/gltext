@@ -38,14 +38,12 @@ font does as well.
 
 ### Dependencies
 
-	go get code.google.com/p/freetype-go
+This packages uses freetype-go[https://code.google.com/p/freetype-go] which is licensed 
+under GPLv2 e FTL licenses. You can choose which one is a better fit for your 
+use case but FTL requires you to give some form of credit to Freetype.org
 
-Freetype-go package is released under GPLv2 and FTL licenses. You can choose
-which one is a better fit for your use case but FTL requires you to give
-some form of credit to Freetype.org
-
-You can read the GPLv2[https://code.google.com/p/freetype-go/source/browse/licenses/gpl.txt]
-and FTL[https://code.google.com/p/freetype-go/source/browse/licenses/ftl.txt]
+You can read the GPLv2 [https://code.google.com/p/freetype-go/source/browse/licenses/gpl.txt]
+and FTL [https://code.google.com/p/freetype-go/source/browse/licenses/ftl.txt]
 licenses for more information about the requirements.
 
 ### Usage
