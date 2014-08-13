@@ -239,6 +239,7 @@ func (f *Font) Printf(x, y float32, fs string, argv ...interface{}) error {
 			gl.CallLists(len(indices), gl.UNSIGNED_INT, indices)
 		}
 		gl.PopMatrix()
+		f.texture.Unbind(gl.TEXTURE_2D)
 	}
 	gl.PopAttrib()
 
