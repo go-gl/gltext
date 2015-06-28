@@ -5,17 +5,17 @@
 package gltext
 
 import (
-	"code.google.com/p/freetype-go/freetype"
-	"code.google.com/p/freetype-go/freetype/truetype"
-	"github.com/go-gl/glh"
 	"image"
 	"io"
 	"io/ioutil"
+
+	"code.google.com/p/freetype-go/freetype"
+	"code.google.com/p/freetype-go/freetype/truetype"
 )
 
 // http://www.freetype.org/freetype2/docs/tutorial/step2.html
 
-// LoadTruetype loads a truetype font from the given stream and 
+// LoadTruetype loads a truetype font from the given stream and
 // applies the given font scale in points.
 //
 // The low and high values determine the lower and upper rune limits
@@ -54,8 +54,8 @@ func LoadTruetype(r io.Reader, scale int32, low, high rune, dir Direction) (*Fon
 	gb := ttf.Bounds(scale)
 	gw := (gb.XMax - gb.XMin)
 	gh := (gb.YMax - gb.YMin) + 5
-	iw := glh.Pow2(uint32(gw * glyphsPerRow))
-	ih := glh.Pow2(uint32(gh * glyphsPerCol))
+	iw := Pow2(uint32(gw * glyphsPerRow))
+	ih := Pow2(uint32(gh * glyphsPerCol))
 
 	rect := image.Rect(0, 0, int(iw), int(ih))
 	img := image.NewRGBA(rect)

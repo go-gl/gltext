@@ -6,16 +6,17 @@ package gltext
 
 import (
 	"fmt"
-	"github.com/go-gl/gl"
-	"github.com/go-gl/glh"
 	"image"
+	"unsafe"
+
+	"github.com/go-gl/gl/v2.1/gl"
 )
 
 // A Font allows rendering of text to an OpenGL context.
 type Font struct {
 	config         *FontConfig // Character set for this font.
-	texture        gl.Texture  // Holds the glyph texture id.
-	listbase       uint        // Holds the first display list id.
+	texture        uint32      // Holds the glyph texture id.
+	listbase       uint32      // Holds the first display list id.
 	maxGlyphWidth  int         // Largest glyph width.
 	maxGlyphHeight int         // Largest glyph height.
 }
@@ -32,20 +33,20 @@ func loadFont(img *image.RGBA, config *FontConfig) (f *Font, err error) {
 	f.config = config
 
 	// Resize image to next power-of-two.
-	img = glh.Pow2Image(img).(*image.RGBA)
+	img = Pow2Image(img).(*image.RGBA)
 	ib := img.Bounds()
 
 	// Create the texture itself. It will contain all glyphs.
 	// Individual glyph-quads display a subset of this texture.
-	f.texture = gl.GenTexture()
-	f.texture.Bind(gl.TEXTURE_2D)
+	gl.GenTextures(1, &f.texture)
+	gl.BindTexture(gl.TEXTURE_2D, f.texture)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, ib.Dx(), ib.Dy(), 0,
-		gl.RGBA, gl.UNSIGNED_BYTE, img.Pix)
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, int32(ib.Dx()), int32(ib.Dy()), 0,
+		gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(img.Pix))
 
 	// Create display lists for each glyph.
-	f.listbase = gl.GenLists(len(config.Glyphs))
+	f.listbase = gl.GenLists(int32(len(config.Glyphs)))
 
 	texWidth := float32(ib.Dx())
 	texHeight := float32(ib.Dy())
@@ -73,7 +74,7 @@ func loadFont(img *image.RGBA, config *FontConfig) (f *Font, err error) {
 		// Advance width (or height if we render top-to-bottom)
 		adv := float32(glyph.Advance)
 
-		gl.NewList(f.listbase+uint(index), gl.COMPILE)
+		gl.NewList(f.listbase+uint32(index), gl.COMPILE)
 		{
 			gl.Begin(gl.QUADS)
 			{
@@ -100,7 +101,7 @@ func loadFont(img *image.RGBA, config *FontConfig) (f *Font, err error) {
 		gl.EndList()
 	}
 
-	err = glh.CheckGLError()
+	err = checkGLError()
 	return
 }
 
@@ -119,8 +120,8 @@ func (f *Font) Glyphs() Charset { return f.config.Glyphs }
 // Release releases font resources.
 // A font can no longer be used for rendering after this call completes.
 func (f *Font) Release() {
-	f.texture.Delete()
-	gl.DeleteLists(f.listbase, len(f.config.Glyphs))
+	gl.DeleteTextures(1, &f.texture)
+	gl.DeleteLists(f.listbase, int32(len(f.config.Glyphs)))
 	f.config = nil
 }
 
@@ -196,7 +197,7 @@ func (f *Font) Printf(x, y float32, fs string, argv ...interface{}) error {
 	}
 
 	var vp [4]int32
-	gl.GetIntegerv(gl.VIEWPORT, vp[:])
+	gl.GetIntegerv(gl.VIEWPORT, &vp[0])
 
 	gl.PushAttrib(gl.TRANSFORM_BIT)
 	gl.MatrixMode(gl.PROJECTION)
@@ -215,11 +216,11 @@ func (f *Font) Printf(x, y float32, fs string, argv ...interface{}) error {
 
 		gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 		gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
-		f.texture.Bind(gl.TEXTURE_2D)
+		gl.BindTexture(gl.TEXTURE_2D, f.texture)
 		gl.ListBase(f.listbase)
 
 		var mv [16]float32
-		gl.GetFloatv(gl.MODELVIEW_MATRIX, mv[:])
+		gl.GetFloatv(gl.MODELVIEW_MATRIX, &mv[0])
 
 		gl.PushMatrix()
 		{
@@ -235,11 +236,11 @@ func (f *Font) Printf(x, y float32, fs string, argv ...interface{}) error {
 				gl.Translatef(x-mgw, float32(vp[3])-y-mgh, 0)
 			}
 
-			gl.MultMatrixf(&mv)
-			gl.CallLists(len(indices), gl.UNSIGNED_INT, indices)
+			gl.MultMatrixf(&mv[0])
+			gl.CallLists(int32(len(indices)), gl.UNSIGNED_INT, unsafe.Pointer(&indices[0]))
 		}
 		gl.PopMatrix()
-		f.texture.Unbind(gl.TEXTURE_2D)
+		gl.BindTexture(gl.TEXTURE_2D, 0)
 	}
 	gl.PopAttrib()
 
@@ -247,7 +248,7 @@ func (f *Font) Printf(x, y float32, fs string, argv ...interface{}) error {
 	gl.MatrixMode(gl.PROJECTION)
 	gl.PopMatrix()
 	gl.PopAttrib()
-	return glh.CheckGLError()
+	return checkGLError()
 }
 
 // GlyphBounds returns the largest width and height for any of the glyphs
