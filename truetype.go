@@ -9,8 +9,9 @@ import (
 	"io"
 	"io/ioutil"
 
-	"code.google.com/p/freetype-go/freetype"
-	"code.google.com/p/freetype-go/freetype/truetype"
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
+	"golang.org/x/image/math/fixed"
 )
 
 // http://www.freetype.org/freetype2/docs/tutorial/step2.html
@@ -51,9 +52,9 @@ func LoadTruetype(r io.Reader, scale int32, low, high rune, dir Direction) (*Fon
 	glyphsPerRow := int32(16)
 	glyphsPerCol := (gc / glyphsPerRow) + 1
 
-	gb := ttf.Bounds(scale)
-	gw := (gb.XMax - gb.XMin)
-	gh := (gb.YMax - gb.YMin) + 5
+	gb := ttf.Bounds(fixed.Int26_6(scale))
+	gw := int32(gb.Max.X - gb.Min.X)
+	gh := int32((gb.Max.Y - gb.Min.Y) + 5)
 	iw := Pow2(uint32(gw * glyphsPerRow))
 	ih := Pow2(uint32(gh * glyphsPerCol))
 
@@ -79,15 +80,14 @@ func LoadTruetype(r io.Reader, scale int32, low, high rune, dir Direction) (*Fon
 
 	for ch := low; ch <= high; ch++ {
 		index := ttf.Index(ch)
-		metric := ttf.HMetric(scale, index)
+		metric := ttf.HMetric(fixed.Int26_6(scale), index)
 
 		fc.Glyphs[gi].Advance = int(metric.AdvanceWidth)
 		fc.Glyphs[gi].X = int(gx)
-		fc.Glyphs[gi].Y = int(gy)
+		fc.Glyphs[gi].Y = int(gy) - int(gh)/2 // shif up half a row so that we actually get the character in frame
 		fc.Glyphs[gi].Width = int(gw)
 		fc.Glyphs[gi].Height = int(gh)
-
-		pt := freetype.Pt(int(gx), int(gy)+int(c.PointToFix32(float64(scale))>>8))
+		pt := freetype.Pt(int(gx), int(gy)+int(c.PointToFixed(float64(scale))>>8))
 		c.DrawString(string(ch), pt)
 
 		if gi%16 == 0 {
