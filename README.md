@@ -52,7 +52,7 @@ licenses for more information about the requirements.
 
 Refer to [go-gl/examples/gltext][ex] for usage examples.
 
-[ex]: https://github.com/go-gl/examples/tree/master/gltext
+[ex]: https://github.com/go-gl/examples/tree/64b743f99c4e9151c09563e9be3339441eb9296b/gltext
 
 
 ### License
